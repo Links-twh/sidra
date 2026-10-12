@@ -11,7 +11,9 @@
   const sharedContainers = CONFIG.containerSelectors;
   const SCRIPT_ONLY_CONTAINERS = ['[class*="passkey" i]', '[class*="iphone" i]', '[role="group"]', 'fieldset'];
 
-  const css = CONFIG.css + '\n' + sharedContainers.join(',\n') + ' {\n  display: none !important;\n}\n';
+  // Keep container hiding in the script so a matching form wrapper cannot be
+  // hidden by CSS before we can check whether it contains a login input.
+  const css = CONFIG.css;
   const STYLE_ID = 'sidra-auth-fix';
   const TEXT_RE = /(sign in with )?iphone|passkey/i;
   const CAPTION_RE = /requires .{0,30}(ios|iphone|ipad)|(ios|ipados) ?\d+ or later/i;
@@ -41,7 +43,7 @@
     // Prefer a matching container. Limit the caption fallback to two parents
     // to avoid hiding the whole form.
     const container = btn.closest(CONTAINER_SELECTOR);
-    if (container && container !== document.body && container !== document.documentElement) {
+    if (container && container !== document.body && container !== document.documentElement && !container.querySelector('input')) {
       hideEl(container);
       return 1;
     }
@@ -49,7 +51,7 @@
     for (let depth = 0; depth < 2 && parent; depth++) {
       if (parent === document.body || parent === document.documentElement) break;
       const text = (parent.textContent || '').trim();
-      if (text && CAPTION_RE.test(text)) {
+      if (text && CAPTION_RE.test(text) && !parent.querySelector('input')) {
         hideEl(parent);
         return 1;
       }

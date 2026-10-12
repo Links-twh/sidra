@@ -177,9 +177,7 @@ describe('authFrameFix', () => {
     const [style] = styles();
     expect(style?.id).toBe('sidra-auth-fix');
     expect(style?.textContent).toContain(CONFIG.css);
-    for (const selector of PASSKEY_CONTAINER_SELECTORS) {
-      expect(style?.textContent).toContain(selector);
-    }
+    expect(style?.textContent).toBe(CONFIG.css);
   });
 
   it('replaces the stylesheet instead of appending a second one', () => {
@@ -199,6 +197,20 @@ describe('authFrameFix', () => {
 
     expect(button.style.display).toBe('none');
     expect(container.style.display).toBe('none');
+  });
+
+  it('leaves a matching container with a login input alone', () => {
+    const button = el('button', { text: 'Sign in with iPhone' });
+    const container = el('div', {
+      selectors: ['[class*="passkey-option" i]'],
+      children: [button, el('input')],
+    });
+    const { run } = createHarness([container]);
+
+    run();
+
+    expect(button.style.display).toBe('none');
+    expect(container.style.display).toBe('');
   });
 
   it('hides a caption that names an iOS requirement', () => {
@@ -239,9 +251,9 @@ describe('authFrameFix', () => {
 
     run();
 
-    // Two rules: the payload's own, plus the block the script appends.
+    // The substituted payload supplies the stylesheet rule.
     expect(info).toHaveBeenCalledWith(
-      `${CONFIG.logPrefix} 2 CSS rules injected, 1 buttons hidden, 1 captions hidden, 1 containers hidden`,
+      `${CONFIG.logPrefix} 1 CSS rules injected, 1 buttons hidden, 1 captions hidden, 1 containers hidden`,
     );
   });
 
